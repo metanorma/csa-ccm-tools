@@ -1,0 +1,155 @@
+= CSA CCM Tools
+
+This gem is used for the parsing and writing of the CSA CCM
+located at https://cloudsecurityalliance.org/working-groups/cloud-controls-matrix.
+
+
+== Install
+
+Add this line to your Gemfile:
+
+[source,ruby]
+----
+gem 'csa-ccm-tools'
+----
+
+And then execute:
+
+[source,sh]
+----
+$ bundle
+----
+
+Or install it yourself as:
+
+[source,sh]
+----
+$ gem install csa-ccm-tools
+----
+
+
+== Usage
+
+This gem is used to do three things:
+
+1. Read the CCM.
+2. Export the CCM into a YAML.
+3. Read the CAIQ answers and write the answers into the CAIQ XSLS file (default or custom file).
+
+The gem comes with the following executables:
+
+* `csa-ccm`: used to extract controls from the official
+  CSA CCM XLSX file into YAML.
+
+
+=== Generating a machine-readable CCM/CAIQ
+
+Run the following command:
+
+[source,sh]
+----
+$ csa-ccm ccm-yaml {version} [-o optional-output-file]
+----
+
+e.g.
+[source,sh]
+----
+$ csa-ccm ccm-yaml 3.0.1 -o ccm-301.yaml
+----
+
+
+
+
+=== Converting CCM XSLX to YAML
+
+Run the following command:
+
+[source,sh]
+----
+$ csa-ccm xlsx2yaml {CAIQ_input.xlsx} [-o optional-output-file]
+----
+
+e.g.
+[source,sh]
+----
+$ csa-ccm xlsx2yaml CAIQ_v3.0.1-09-01-2017_FINAL.xlsx caiq.yaml
+----
+
+Where,
+
+* the CAIQ YAML will be created at `[optional-output-file]` or
+  using the input file's name (e.g. `CAIQ_input.xsls` becomes
+  `CAIQ_input.yaml`) at the current working directory or the
+  specified path;
+
+This is an example of the extracted CAIQ YAML: link:samples/ccm.yaml[]
+
+
+=== Converting a filled CAIQ to YAML
+
+[source,sh]
+----
+$ csa-ccm caiq2yaml {CAIQ_input.xlsx} [-n optional-name] [-p optional-path]
+----
+
+e.g.
+[source,sh]
+----
+$ csa-ccm caiq2yaml my-providers-caiq.xlsx -n my-caiq -p ../
+----
+
+Where,
+
+* the CAIQ YAML will be created at `[optional-name]` or
+  using the input file's name at the current working directory or the specified path.
+  e.g. `my-providers-caiq.xsls` becomes
+  `my-providers-caiq.controls.yaml` and `my-providers-caiq.answers.yaml`; if
+  name provided, becomes `{optinal-name}.controls.yaml` and `{optinal-name}.answers.yaml`.
+
+This is an example of:
+* the extracted CAIQ YAML: link:samples/ccm.yaml[]
+* the extracted CAIQ Answers YAML: link:samples/ccm.answers.yaml[]
+
+
+=== Writing to the CAIQ XSLX template using YAML
+
+The CAIQ template contains fields to be written, namely:
+
+* Consensus Assessment Answers (Yes, No, Not Applicable)
+* Notes
+
+The format of the Answers YAML file is shown in this example link:samples/ccm-answers.yaml[].
+
+Run the following command:
+
+[source,sh]
+----
+$ csa-ccm generate-with-answers {answers.yaml} [-t CAIQ_template.xlsx || -r CAIQ-version ] [-o optional-output-file]
+----
+
+e.g.
+[source,sh]
+----
+$ csa-ccm generate-with-answers ribose-caiq.answers.yaml -t CAIQ_v3.0.1-09-01-2017_FINAL.xlsx
+# or
+$ csa-ccm generate-with-answers ribose-caiq.answers.yaml -r 3.0.1
+----
+
+
+Where,
+
+* the `-t` option specifies the template file to use. If none
+  specified, the default template file included in the gem, which
+  matches the `answers.yaml` `metadata` section, will be used.
+  e.g. (version `3.0.1` will use `CAIQ_v3.0.1-09-01-2017_FINAL.xlsx`)
+
+* the CAIQ YAML will be created at `[optional-output-file]` or
+  using the input file's name (e.g. `CAIQ_input.xsls` becomes
+  `CAIQ_input.yaml`) at the current working directory or the
+  specified path;
+
+
+
+== Credits
+
+This program is created and maintained by Ribose.

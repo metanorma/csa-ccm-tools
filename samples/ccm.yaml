@@ -1,0 +1,34 @@
+---
+ccm:
+  metadata:
+    version: 3.0.1
+    title: CONSENSUS ASSESSMENTS INITIATIVE QUESTIONNAIRE v3.0.1
+    source-file: "CAIQ_v3.0.1-09-01-2017_FINAL.xlsx"
+  control-domains:
+    - id: AIS
+      name: Application & Interface Security
+      controls:
+      - id: AIS-01
+        name: Application Security
+        specification: "Applications and programming interfaces (APIs) shall be designed, developed, deployed, and tested in accordance with leading industry standards (e.g., OWASP for web applications) and adhere to applicable legal, statutory, or regulatory compliance obligations."
+        questions:
+          - id: AIS-01.1
+            content: "Do you use industry standards (Build Security in Maturity Model [BSIMM] benchmarks, Open Group ACS Trusted Technology Provider Framework, NIST, etc.) to build in security for your Systems/Software Development Lifecycle (SDLC)?"
+          - id: AIS-01.2
+            content: "Do you use an automated source code analysis tool to detect security defects in code prior to production?"
+          - id: AIS-01.3
+            content: "Do you use manual source-code analysis to detect security defects in code prior to production?"
+          - id: AIS-01.4
+            content: "Do you verify that all of your software suppliers adhere to industry standards for Systems/Software Development Lifecycle (SDLC) security?"
+          - id: AIS-01.5
+            content: "(SaaS only) Do you review your applications for security vulnerabilities and address any issues prior to deployment to production?"
+      - id: AIS-02
+        name: Customer Access Requirements
+        specification: "Prior to granting customers access to data, assets, and information systems, identified security, contractual, and regulatory requirements for customer access shall be addressed."
+        questions:
+          - id: AIS-02.1
+            content: "Are all identified security, contractual, and regulatory requirements for customer access contractually addressed and remediated prior to granting customers access to data, assets, and information systems?"
+          - id: AIS-02.1
+            content: "Are all requirements and trust levels for customers’ access defined and documented?"
+
+

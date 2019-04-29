@@ -1,0 +1,16 @@
+---
+ccm:
+  metadata:
+    version: 3.0.1
+    title: CONSENSUS ASSESSMENTS INITIATIVE QUESTIONNAIRE v3.0.1
+    source-file: "CAIQ_v3.0.1-09-01-2017_FINAL.xlsx"
+  answers:
+    - control-id: AIS-01
+      answer: yes # or `no` or `NA`
+      notes: The control is satisfied.
+    - question-id: AIS-01.1
+      answer: yes # or `no` or `NA`
+      notes: Design and implementation adheres to industry acceptance standards.
+    - question-id: AIS-01.2
+      answer: NA # or `no` or `NA`
+      notes: This control does not apply to this organization.

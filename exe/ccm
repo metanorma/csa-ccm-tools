@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+
+require 'creek'
+require 'pp'
+require 'pathname'
+require 'fileutils'
+require_relative '../lib/csa/termbase.rb'
+# require 'pry'
+
+filepath = ARGV[0]
+#'./csa-ccm.xlsx'
+
+if filepath.nil?
+  puts 'Error: no filepath given as first argument.'
+  exit 1
+end
+
+if Pathname.new(filepath).extname != ".xlsx"
+  puts 'Error: filepath given must have extension .xlsx.'
+  exit 1
+end
+
+
+workbook = Csa::Ccm::MatrixWorkbook.new(filepath)
+workbook.glossary_info.metadata_section.structure
+workbook.glossary_info.metadata_section.attributes
+
+languages = {}
+
+workbook.languages_supported.map do |lang|
+  puts "************** WORKING ON LANGUAGE (#{lang})"
+  sheet = workbook.language_sheet(lang)
+  termsec = sheet.terms_section
+  languages[sheet.language_code] = termsec.terms
+end
+
+collection = Csa::Ccm::ControlDomain.new
+
+languages.each_pair do |lang, terms|
+  terms.each do |term|
+    collection.add_term(term)
+  end
+end
+
+# collection[1206].inspect
+
+output_dir = Dir.pwd
+
+collection.to_file(File.join(output_dir, Pathname.new(filepath).basename.sub_ext(".yaml")))
+
+collection_output_dir = File.join(output_dir, "concepts")
+
+FileUtils.mkdir_p(collection_output_dir)
+
+collection.keys.each do |id|
+  collection[id].to_file(File.join(collection_output_dir, "concept-#{id}.yaml"))
+end
+
+# french = workbook.language_sheet("French")
+# french.sections[3].structure
+# french.sections[3].terms
+
+# english = workbook.language_sheet("English")
+# english.terms_section
+# english.terms_section.terms
+
+#pry.binding
