@@ -1,7 +1,6 @@
-
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "tc211/termbase/version"
+require "csa/ccm/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "csa-ccm"
@@ -9,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Ribose"]
   spec.email         = ["open.source@ribose.com"]
 
-  spec.summary       = %q{Build scripts for the ISO/TC 211 Ccm}
-  spec.description   = %q{Build scripts for the ISO/TC 211 Ccm}
+  spec.summary       = %q{Parsing and writing of the CSA CCM}
+  spec.description   = %q{Parsing and writing of the CSA CCM located at https://cloudsecurityalliance.org/working-groups/cloud-controls-matrix.}
   spec.homepage      = "https://open.ribose.com"
 
   # Specify which files should be added to the gem when it is released.
@@ -24,8 +23,9 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency "iso-639"
   spec.add_runtime_dependency "creek"
+  spec.add_runtime_dependency "thor", "~> 0.20.3"
 
-  spec.add_development_dependency "bundler", "~> 1.17"
+  spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
 end
