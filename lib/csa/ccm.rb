@@ -1,4 +1,4 @@
-require "csa/termbase/version"
+#require "csa/termbase/version"
 
 module Csa
   module Ccm
@@ -7,5 +7,5 @@ module Csa
   end
 end
 
-require 'csa/termbase/term_workbook'
-require 'csa/termbase/concept_collection'
+#require 'csa/termbase/term_workbook'
+#require 'csa/termbase/concept_collection'
