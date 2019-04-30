@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "csa/termbase"
+require "csa/ccm"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
