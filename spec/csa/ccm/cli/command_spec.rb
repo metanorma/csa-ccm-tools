@@ -1,14 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe Csa::Ccm::Cli do
-	before(:all) do
+  before(:all) do
     FileUtils.mkdir_p './tmp'
   end
 
   after(:all) do
-    FileUtils.rm_rf './tmp'
-    FileUtils.rm './caiq-3.0.1.yaml'
-    FileUtils.rm './resources/csa-caiq-v3.0.1-12-05-2016.yaml'
+    # FileUtils.rm_rf './tmp'
+    # FileUtils.rm_f './caiq-3.0.1.yaml'
+    # FileUtils.rm_f './resources/csa-caiq-v3.0.1-12-05-2016.yaml'
   end
 
   it 'has a version number' do
@@ -46,4 +46,13 @@ RSpec.describe Csa::Ccm::Cli do
 
     expect(File.exist?('./tmp/ccm-301-2.yaml')).to be_truthy
   end
+
+  it 'caiq2yaml ./resources/csa-caiq-v3.0.1-09-01-2017.xlsx' do
+    command = %w[caiq2yaml ./resources/csa-caiq-v3.0.1-09-01-2017.xlsx -n test -p ./tmp]
+    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(File.exist?('./tmp/test.control.yaml')).to be_truthy
+    expect(File.exist?('./tmp/test.answers.yaml')).to be_truthy
+  end
+  
 end

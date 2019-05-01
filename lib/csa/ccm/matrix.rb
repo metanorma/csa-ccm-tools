@@ -1,12 +1,13 @@
 require_relative "control_domain"
 require_relative "control"
 require_relative "question"
+require_relative "answer"
 
 module Csa::Ccm
 
 class Matrix
   ATTRIBS = %i(
-    version title source_file workbook source_path control_domains
+    version title source_file workbook source_path control_domains answers
   )
 
   attr_accessor *ATTRIBS
@@ -21,6 +22,7 @@ class Matrix
     end
 
     @control_domains ||= {}
+    @answers ||= []
 
     self
   end
@@ -160,16 +162,26 @@ class Matrix
       # Store the Question
       # putsquestion.to_hash
       control.questions[row.question_id] = Question.new(id: row.question_id, content: row.question_content)
+
+      answer = 'NA' if row.answer_na
+      answer = 'no' if row.answer_no
+      answer = 'yes' if row.answer_yes
+      answer_note = row.answer_yes || row.answer_no || row.answer_na
+      matrix.answers << Answer.new(
+          question_id: row.question_id,
+          control_id: control_id,
+          answer: answer,
+          notes: answer_note)
     end
 
     matrix
   end
 
-  def to_hash
+  def to_control_hash
     {
-      "ccm" => {
-        "metadata" => metadata.to_hash,
-        "control_domains" => control_domains.inject([]) do |acc, (k, v)|
+      'ccm' => {
+        'metadata' => metadata.to_hash,
+        'control_domains' => control_domains.inject([]) do |acc, (k, v)|
             acc << v.to_hash
             acc
           end
@@ -177,9 +189,27 @@ class Matrix
     }
   end
 
-  def to_file(filename)
-    File.open(filename,"w") do |file|
-      file.write(to_hash.to_yaml)
+  def to_answers_hash
+    {
+      'ccm' => {
+        'metadata' => metadata.to_hash,
+        'answers' => answers.inject([]) do |acc, v|
+          acc << v.to_hash
+          acc
+        end
+      }
+    }
+  end
+
+  def to_control_file(filename)
+    File.open(filename, 'w') do |file|
+      file.write(to_control_hash.to_yaml)
+    end
+  end
+
+  def to_answers_file(filename)
+    File.open(filename, 'w') do |file|
+      file.write(to_answers_hash.to_yaml)
     end
   end
 
