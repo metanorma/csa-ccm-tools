@@ -1,42 +1,38 @@
 module Csa::Ccm
 
-class Control < Hash
-  attr_accessor :id
-  attr_accessor :terms
-  DEFAULT_LANGUAGE = "eng"
+class Control
+  ATTRIBS = %i(
+    id name specification questions
+  )
+
+  attr_accessor *ATTRIBS
 
   def initialize(options={})
-    terms = options.delete(:terms) || []
-    terms.each do |term|
-      add_term(term)
-    end
-
     options.each_pair do |k,v|
       self.send("#{k}=", v)
     end
-  end
 
-  def add_term(term)
-    self[term.language_code] = term
-  end
+    @questions ||= {}
 
-  def default_term
-    if self[DEFAULT_LANGUAGE]
-      self[DEFAULT_LANGUAGE]
-    else
-      puts "[csa-ccm] term (lang: #{keys.first}, ID: #{id}) is missing a corresponding English term, probably needs updating."
-      self[keys.first]
-    end
+    self
   end
 
   def to_hash
-    default_hash = {
-      "term" => default_term.term,
-      "termid" => id
-    }
+    ATTRIBS.inject({}) do |acc, attrib|
+      value = self.send(attrib)
 
-    self.inject(default_hash) do |acc, (lang, term)|
-      acc.merge!(lang => term.to_hash)
+      unless value.nil?
+        if attrib == :questions
+          value = value.inject([]) do |acc, (k, v)|
+            acc << v.to_hash
+            acc
+          end
+        end
+
+        acc.merge(attrib.to_s => value)
+      else
+        acc
+      end
     end
   end
 
@@ -47,4 +43,5 @@ class Control < Hash
   end
 
 end
+
 end

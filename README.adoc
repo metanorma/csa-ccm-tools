@@ -107,6 +107,7 @@ Where,
   name provided, becomes `{optinal-name}.controls.yaml` and `{optinal-name}.answers.yaml`.
 
 This is an example of:
+
 * the extracted CAIQ YAML: link:samples/ccm.yaml[]
 * the extracted CAIQ Answers YAML: link:samples/ccm.answers.yaml[]
 

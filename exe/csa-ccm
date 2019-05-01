@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require "bundler/setup"
+require_relative "../lib/csa/ccm/cli"
 require_relative "../lib/csa/ccm/cli/command"
 
 Csa::Ccm::Cli::Command.start(ARGV)
