@@ -1,23 +1,40 @@
-require_relative "concept"
+require_relative "control"
 
 module Csa::Ccm
 
-class ControlDomain < Hash
+class ControlDomain
+  ATTRIBS = %i(
+    id name controls
+  )
 
-  def add_term(term)
-    if self[term.id]
-      self[term.id].add_term(term)
-    else
-      self[term.id] = Control.new(
-        id: term.id,
-        terms: [term]
-      )
+  attr_accessor *ATTRIBS
+
+  def initialize(options={})
+    options.each_pair do |k,v|
+      self.send("#{k}=", v)
     end
+
+    @controls ||= {}
+
+    self
   end
 
   def to_hash
-    self.inject({}) do |acc, (id, concept)|
-      acc.merge!(id => concept.to_hash)
+    ATTRIBS.inject({}) do |acc, attrib|
+      value = self.send(attrib)
+
+      unless value.nil?
+        if attrib == :controls
+          value = value.inject([]) do |acc, (k, v)|
+            acc << v.to_hash
+            acc
+          end
+        end
+
+        acc.merge(attrib.to_s => value)
+      else
+        acc
+      end
     end
   end
 

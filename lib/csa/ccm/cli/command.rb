@@ -2,7 +2,6 @@ require 'rake'
 require 'thor'
 
 require_relative 'ui'
-require_relative 'yaml_convert'
 
 module Csa
   module Ccm
@@ -12,24 +11,24 @@ module Csa
         option :output_file, aliases: :o, type: :string, desc: 'Optional output YAML file. If missed, the input file’s name will be used'
 
         def ccm_yaml(version)
-          input_files = YamlConvert.lookup_xlsx version
+          input_files = Resource.lookup_version(version)
 
           unless input_files || !input_files.empty?
             UI.say("No file found for #{version} version")
             return
           end
 
-          input_file = input_files[0]
+          input_file = input_files.first
 
           unless File.exist? input_file
             UI.say('No file found for version')
             return
           end
 
-          result_yaml = YamlConvert.from_ccm version, input_file
+          matrix = Matrix.from_xlsx(version, input_file)
 
-          output_file = options[:output_file] || "#{version}.yaml"
-          YamlConvert.to_file result_yaml, output_file
+          output_file = options[:output_file] || "caiq-#{version}.yaml"
+          matrix.to_file(output_file)
         end
 
         desc "xlsx2yaml XSLT_PATH", "Converting CCM XSLX to YAML"
