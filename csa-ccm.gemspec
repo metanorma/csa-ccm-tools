@@ -6,7 +6,7 @@ require "csa/ccm/cli/version"
 Gem::Specification.new do |spec|
   spec.name          = "csa-ccm"
   spec.version       = Csa::Ccm::Cli::VERSION
-  spec.authors       = ["Ribose"]
+  spec.authors       = ["Ribose Inc."]
   spec.email         = ["open.source@ribose.com"]
 
   spec.summary       = %q{Parsing and writing of the CSA CCM}
