@@ -2,6 +2,7 @@ require 'rake'
 require 'thor'
 
 require_relative 'ui'
+require_relative '../cli'
 
 module Csa
   module Ccm
