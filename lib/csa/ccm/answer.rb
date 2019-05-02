@@ -6,7 +6,7 @@ class Answer
     control_id
     question_id
     answer
-    notes
+    comment
   )
 
   attr_accessor *ATTRIBS

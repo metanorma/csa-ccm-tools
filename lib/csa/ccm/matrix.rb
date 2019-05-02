@@ -51,7 +51,7 @@ class Matrix
   class Row
     ATTRIBS = %i(
       control_domain_id control_id question_id control_spec
-      question_content answer_yes answer_no answer_na notes
+      question_content answer_yes answer_no answer_na comment
       control_domain_description
     )
 
@@ -66,10 +66,21 @@ class Matrix
       @answer_yes = ruby_xl_row[5].value
       @answer_no = ruby_xl_row[6].value
       @answer_na = ruby_xl_row[7].value
+      @comment = ruby_xl_row[8].value
+
+      # In 3.0.1 2017-09-01, question_id for "AIS-02.2" is listed as "AIS- 02.2"
+      %w(control_id question_id).each do |field|
+        if val = self.send(field)
+          self.send("#{field}=", val.gsub(/\s/, ""))
+        end
+      end
 
       # In 3.0.1 2017-09-01, Rows 276 and 277's control ID says "LG-02" but it should be "STA-05" instead.
-      @control_id = question_id.split(".").first if question_id
-      @control_domain_id = control_id.split("-").first if control_id
+      if @control_id.nil? && @question_id
+        @control_id = @question_id.split(".").first
+      end
+
+      @control_domain_id = control_id.split("-").first if @control_id
 
       # puts "HERE IN ROW! #{ruby_xl_row.cells.map(&:value)}"
 
@@ -80,16 +91,16 @@ class Matrix
       self
     end
 
-    def control_domain_name
+    def control_domain_title
       return nil if control_domain_description.nil?
-      name, _, control_name = control_domain_description.split(/(\n)/)
+      name, _, control_title = control_domain_description.split(/(\n)/)
       name
     end
 
-    def control_name
+    def control_title
       return nil if control_domain_description.nil?
-      name, _, control_name = control_domain_description.split(/(\n)/)
-      control_name
+      name, _, control_title = control_domain_description.split(/(\n)/)
+      control_title
     end
   end
 
@@ -134,7 +145,7 @@ class Matrix
         control_domain = matrix.control_domains[domain_id] ||
           ControlDomain.new(
             id: row.control_domain_id,
-            name: row.control_domain_name
+            title: row.control_domain_title
           )
 
         # puts"control_domain #{control_domain.to_hash}"
@@ -149,7 +160,7 @@ class Matrix
         control_domain = matrix.control_domains[domain_id]
         control = control_domain.controls[control_id] || Control.new(
           id: row.control_id,
-          name: row.control_name,
+          title: row.control_title,
           specification: row.control_spec
         )
 
@@ -163,15 +174,20 @@ class Matrix
       # putsquestion.to_hash
       control.questions[row.question_id] = Question.new(id: row.question_id, content: row.question_content)
 
-      answer = 'NA' if row.answer_na
-      answer = 'no' if row.answer_no
-      answer = 'yes' if row.answer_yes
-      answer_note = row.answer_yes || row.answer_no || row.answer_na
+      answer = if row.answer_na
+        'NA'
+      elsif row.answer_no
+        'no'
+      elsif row.answer_yes
+        'yes'
+      end
+
       matrix.answers << Answer.new(
           question_id: row.question_id,
           control_id: control_id,
           answer: answer,
-          notes: answer_note)
+          comment: row.comment
+        )
     end
 
     matrix

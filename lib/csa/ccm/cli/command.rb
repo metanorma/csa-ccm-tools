@@ -32,7 +32,7 @@ module Csa
           matrix.to_control_file(output_file)
         end
 
-        desc "xlsx2yaml XSLT_PATH", "Converting CCM XSLX to YAML"
+        desc "xlsx2yaml XLSX_PATH", "Converting CCM XSLX to YAML"
         option :output_file, aliases: :o, type: :string, desc: "Optional output YAML file. If missed, the input file’s name will be used"
 
         def xlsx2yaml(input_xlsx_file)
@@ -48,7 +48,7 @@ module Csa
           matrix.to_control_file(output_file)
         end
 
-        desc "caiq2yaml XSLT_PATH", "Converting a filled CAIQ to YAML"
+        desc "caiq2yaml XLSX_PATH", "Converting a filled CAIQ to YAML"
         option :output_name, aliases: :n, type: :string, desc: "Optional output CAIQ YAML file. If missed, the input file’s name will be used"
         option :output_path, aliases: :p, type: :string, desc: "Optional output directory for result file. If missed pwd will be used"
 

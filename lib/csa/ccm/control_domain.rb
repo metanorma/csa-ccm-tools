@@ -4,7 +4,7 @@ module Csa::Ccm
 
 class ControlDomain
   ATTRIBS = %i(
-    id name controls
+    id title controls
   )
 
   attr_accessor *ATTRIBS
@@ -25,10 +25,7 @@ class ControlDomain
 
       unless value.nil?
         if attrib == :controls
-          value = value.inject([]) do |acc, (k, v)|
-            acc << v.to_hash
-            acc
-          end
+          value = value.values.map(&:to_hash)
         end
 
         acc.merge(attrib.to_s => value)
