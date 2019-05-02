@@ -71,9 +71,9 @@ class Matrix
 
       # puts "HERE IN ROW! #{ruby_xl_row.cells.map(&:value)}"
 
-      puts control_domain_description
-      puts control_id
-      puts question_id
+      # puts control_domain_description
+      # puts control_id
+      # puts question_id
 
       self
     end
@@ -116,15 +116,15 @@ class Matrix
     # We loop over all Questions
     (start_row..max_row_number).each do |row_number|
 
-      puts "looping row #{row_number}"
+      # puts "looping row #{row_number}"
       row = matrix.row(row_number)
       # Skip row if there is no question-id
-      puts "row #{row.question_id}"
+      # puts"row #{row.question_id}"
       # require 'pry'
       # binding.pry
       next if row.question_id.nil?
 
-      puts "domain_id #{row.control_domain_id}"
+      # puts"domain_id #{row.control_domain_id}"
 
       domain_id = row.control_domain_id
       unless domain_id.nil?
@@ -135,7 +135,7 @@ class Matrix
             name: row.control_domain_name
           )
 
-        puts "control_domain #{control_domain.to_hash}"
+        # puts"control_domain #{control_domain.to_hash}"
 
         # Store the Control Domain
         matrix.control_domains[domain_id] = control_domain
@@ -151,14 +151,14 @@ class Matrix
           specification: row.control_spec
         )
 
-        puts "control #{control.to_hash}"
+        # puts"control #{control.to_hash}"
         # Store the Control
         control_domain.controls[control_id] = control
       end
 
       question = matrix.control_domains[domain_id].controls[control_id]
       # Store the Question
-      puts question.to_hash
+      # putsquestion.to_hash
       control.questions[row.question_id] = Question.new(id: row.question_id, content: row.question_content)
     end
 

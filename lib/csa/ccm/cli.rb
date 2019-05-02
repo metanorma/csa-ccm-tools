@@ -1,7 +1,9 @@
-module Csa::Ccm
-module Cli
+module Csa
+  module Ccm
+    module Cli
 
-end
+    end
+  end
 end
 
 require_relative "cli/resource"
