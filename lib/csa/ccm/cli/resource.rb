@@ -15,11 +15,11 @@ module Csa
           Dir["#{root_gem}/resources/**/*v#{version}*.xlsx"]
         end
 
-        def self.from_xlsx(xslt_path)
+        def self.from_xlsx(xlsx_path)
           raise 'Not implemented yet'
         end
 
-        def from_caiq(xslt_path, output_name, output_path)
+        def from_caiq(xlsx_path, output_name, output_path)
           raise 'Not implemented yet'
         end
 

@@ -2,7 +2,7 @@ module Csa::Ccm
 
 class Control
   ATTRIBS = %i(
-    id name specification questions
+    id title specification questions
   )
 
   attr_accessor *ATTRIBS
@@ -22,11 +22,9 @@ class Control
       value = self.send(attrib)
 
       unless value.nil?
+
         if attrib == :questions
-          value = value.inject([]) do |acc, (k, v)|
-            acc << v.to_hash
-            acc
-          end
+          value = value.values.map(&:to_hash)
         end
 
         acc.merge(attrib.to_s => value)
