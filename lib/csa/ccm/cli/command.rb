@@ -11,24 +11,24 @@ module Csa
         desc 'ccm-yaml VERSION', 'Generating a machine-readable CCM/CAIQ'
         option :output_file, aliases: :o, type: :string, desc: 'Optional output YAML file. If missed, the input file’s name will be used'
 
-        def ccm_yaml(version)
-          input_files = Resource.lookup_version(version)
+        def ccm_yaml(caiq_version)
+          input_files = Resource.lookup_version(caiq_version)
 
           unless input_files || !input_files.empty?
-            UI.say("No file found for #{version} version")
+            UI.say("No file found for #{caiq_version} version")
             return
           end
 
           input_file = input_files.first
 
           unless File.exist? input_file
-            UI.say("#{input_file} doesn't exists for #{version} version")
+            UI.say("#{input_file} doesn't exists for #{caiq_version} version")
             return
           end
 
-          matrix = Matrix.from_xlsx(version, input_file)
+          matrix = Matrix.from_xlsx(caiq_version, input_file)
 
-          output_file = options[:output_file] || "caiq-#{version}.yaml"
+          output_file = options[:output_file] || "caiq-#{caiq_version}.yaml"
           matrix.to_control_file(output_file)
         end
 
@@ -41,7 +41,7 @@ module Csa
             return
           end
 
-          version = input_xlsx_file[/(?<=v)[0-9\.]*(?=-)/] || 'unknown'
+          version = Matrix.version_from_filepath(input_xlsx_file)
           matrix = Matrix.from_xlsx(version, input_xlsx_file)
 
           output_file = options[:output_file] || input_xlsx_file.gsub('.xlsx', '.yaml')
@@ -58,7 +58,7 @@ module Csa
             return
           end
 
-          version = input_xlsx_file[/(?<=v)[0-9\.]*(?=-)/] || 'unknown'
+          version = Matrix.version_from_filepath(input_xlsx_file)
           matrix = Matrix.from_xlsx(version, input_xlsx_file)
 
           base_output_file = options[:output_name] || File.basename(input_xlsx_file.gsub('.xlsx', ''))
@@ -74,9 +74,40 @@ module Csa
         end
 
         desc "generate-with-answers ANSWERS_YAML", "Writing to the CAIQ XSLX template using YAML"
+        option :template_path, aliases: :t, type: :string, desc: "Optional input template CAIQ XSLT file. If missed -r will be checked"
+        option :caiq_version, aliases: :r, type: :string, default: "3.0.1", desc: "Optional input template CAIQ XSLT version. If missed -t will be checked"
+        option :output_file, aliases: :o, type: :string, desc: 'Optional output XSLT file. If missed, the input file’s name will be used'
 
-        def generate_with_answers(answers)
-          raise 'Not implemented yet'
+        def generate_with_answers(answers_yaml_path)
+          unless answers_yaml_path
+            UI.say("#{answers_yaml_path} file doesn't exists")
+            return
+          end
+
+          unless options[:template_path] || options[:caiq_version] 
+            UI.say("No input template specified by -r or -t")
+            return
+          end
+
+          template_xslt_path = options[:template_path]
+          unless options[:template_path]
+            caiq_version = options[:caiq_version]
+            input_files = Resource.lookup_version(caiq_version)
+
+            unless input_files || !input_files.empty?
+              UI.say("No file found for #{caiq_version} version")
+              return
+            end
+
+            template_xslt_path = input_files.first
+          end
+
+          output_file = options[:output_file]
+          unless options[:output_file]
+            output_file = "#{answers_yaml_path.gsub('answers.yaml', '')}.xlsx"
+          end
+
+          Matrix.fill_answers(answers_yaml_path, template_xslt_path, output_file)
         end
       end
     end

@@ -3,12 +3,19 @@ require_relative "control"
 require_relative "question"
 require_relative "answer"
 
+require 'rubyXL'
+require 'rubyXL/convenience_methods/cell'
+require 'rubyXL/convenience_methods/workbook'
+require 'rubyXL/convenience_methods/worksheet'
+
 module Csa::Ccm
 
 class Matrix
   ATTRIBS = %i(
     version title source_file workbook source_path control_domains answers
   )
+
+  START_ROW = 4 # FIXME add some basic logic to calculate it
 
   attr_accessor *ATTRIBS
 
@@ -33,6 +40,10 @@ class Matrix
 
   def worksheet
     workbook.worksheets.first
+  end
+
+  def workbook
+    @workbook
   end
 
   def title
@@ -108,6 +119,10 @@ class Matrix
     Row.new(worksheet[i])
   end
 
+  def self.version_from_filepath(input_file)
+    input_file[/(?<=v)[0-9\.]*(?=-)/] || 'unknown'
+  end
+
   def self.from_xlsx(version, input_file)
     matrix = Matrix.new(
       version: version,
@@ -115,7 +130,6 @@ class Matrix
     )
 
     all_rows = matrix.worksheet.sheet_data.rows
-    start_row = 4 # FIXME add some basic logic to calculate it
 
     last_control_domain = nil
     last_control_id = nil
@@ -123,11 +137,11 @@ class Matrix
 
     worksheet = matrix.worksheet
 
-    row_number = start_row
+    row_number = START_ROW
     max_row_number = all_rows.length - 1
 
     # We loop over all Questions
-    (start_row..max_row_number).each do |row_number|
+    (START_ROW..max_row_number).each do |row_number|
 
       # puts "looping row #{row_number}"
       row = matrix.row(row_number)
@@ -191,6 +205,47 @@ class Matrix
     end
 
     matrix
+  end
+
+  def self.fill_answers(answers_yaml_path, template_xslt_path, output_xslt_path)
+    answers = YAML.load(File.read(answers_yaml_path, encoding: 'UTF-8'))['ccm']['answers']
+    answers_hash = Hash[*answers.collect { |a| [a['question-id'], a] }.flatten]
+
+    matrix = Matrix.new(
+      version: version_from_filepath(template_xslt_path),
+      source_path: template_xslt_path
+    )
+
+    worksheet = matrix.worksheet
+    all_rows = worksheet.sheet_data.rows
+    max_row_number = all_rows.length - 1
+
+    (START_ROW..max_row_number).each do |row_number|
+      question_id = worksheet[row_number][2].value
+
+      if answers_hash.key?(question_id)
+        answer = answers_hash[question_id]
+        answer_value = answer['answer']
+
+        answer_col = case answer_value
+                     when 'yes'
+                       5
+                     when true
+                       5
+                     when 'no'
+                       6
+                     when false
+                       6
+                     when 'NA'
+                       7
+                     end
+
+        worksheet[row_number][answer_col].change_contents(answer['notes'])
+      end
+    end
+
+    matrix.workbook.write(output_xslt_path)
+    worksheet
   end
 
   def to_control_hash
