@@ -1,0 +1,21 @@
+type: "//rec"
+required:
+  ccm:
+    type: "//rec"
+    required:
+      metadata:
+        type: "//rec"
+        required:
+          version: "//str"
+          title: "//str"
+          source_file: "//str"
+      answers:
+        type: "//arr"
+        contents:
+          type: "//rec"
+          optional: # FIXME they should not be optional
+            answer: "//str"
+            notes: "//str"
+          required:
+            control_id: "//str"
+            question_id: "//str"

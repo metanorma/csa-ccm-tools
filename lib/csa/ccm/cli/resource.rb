@@ -1,4 +1,3 @@
-require 'rubyXL'
 require 'yaml'
 
 require_relative '../../../ext/string'
@@ -13,14 +12,6 @@ module Csa
 
         def self.lookup_version(version)
           Dir["#{root_gem}/resources/**/*v#{version}*.xlsx"]
-        end
-
-        def self.from_xlsx(xlsx_path)
-          raise 'Not implemented yet'
-        end
-
-        def from_caiq(xlsx_path, output_name, output_path)
-          raise 'Not implemented yet'
         end
 
         def self.to_file(hash, output_file)

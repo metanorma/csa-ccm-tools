@@ -1,0 +1,35 @@
+type: "//rec"
+required:
+  ccm:
+    type: "//rec"
+    required:
+      metadata:
+        type: "//rec"
+        required:
+          version: "//str"
+          title: "//str"
+          source_file: "//str"
+      control_domains:
+        type: "//arr"
+        contents:
+          type: "//rec"
+          optional: # FIXME they should not be optional
+            title: "//str"
+          required:
+            id: "//str"
+            controls:
+              type: "//arr"
+              contents:
+                type: "//rec"
+                optional: # FIXME they should not be optional
+                  title: "//str"
+                  specification: "//str"
+                required:
+                  id: "//str"
+                  questions:
+                    type: "//arr"
+                    contents:
+                      type: "//rec"
+                      required:
+                        id: "//str"
+                        content: "//str"

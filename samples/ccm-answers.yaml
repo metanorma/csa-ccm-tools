@@ -5,7 +5,7 @@ ccm:
     title: CONSENSUS ASSESSMENTS INITIATIVE QUESTIONNAIRE v3.0.1
     source-file: "CAIQ_v3.0.1-09-01-2017_FINAL.xlsx"
   answers:
-    - control-id: AIS-01
+    - question-id: AIS-01.3
       answer: yes # or `no` or `NA`
       notes: The control is satisfied.
     - question-id: AIS-01.1
