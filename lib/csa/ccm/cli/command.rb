@@ -26,9 +26,9 @@ module Csa
             return
           end
 
-          matrix = Matrix.from_xlsx(caiq_version, input_file)
+          matrix = Matrix.from_xlsx(input_file)
 
-          output_file = options[:output_file] || "caiq-#{caiq_version}.yaml"
+          output_file = options[:output_file] || "caiq-#{matrix.version}.yaml"
           matrix.to_control_file(output_file)
         end
 
@@ -41,8 +41,7 @@ module Csa
             return
           end
 
-          version = Matrix.version_from_filepath(input_xlsx_file)
-          matrix = Matrix.from_xlsx(version, input_xlsx_file)
+          matrix = Matrix.from_xlsx(input_xlsx_file)
 
           output_file = options[:output_file] || input_xlsx_file.gsub('.xlsx', '.yaml')
           matrix.to_control_file(output_file)
@@ -59,7 +58,7 @@ module Csa
           end
 
           version = Matrix.version_from_filepath(input_xlsx_file)
-          matrix = Matrix.from_xlsx(version, input_xlsx_file)
+          matrix = Matrix.from_xlsx(input_xlsx_file)
 
           base_output_file = options[:output_name] || File.basename(input_xlsx_file.gsub('.xlsx', ''))
           if options[:output_path]

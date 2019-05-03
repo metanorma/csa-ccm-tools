@@ -1,7 +1,7 @@
-require_relative "control_domain"
-require_relative "control"
-require_relative "question"
-require_relative "answer"
+require_relative 'control_domain'
+require_relative 'control'
+require_relative 'question'
+require_relative 'answer'
 
 require 'rubyXL'
 require 'rubyXL/convenience_methods/cell'
@@ -11,21 +11,22 @@ require 'rubyXL/convenience_methods/worksheet'
 module Csa::Ccm
 
 class Matrix
-  ATTRIBS = %i(
-    version title source_file workbook source_path control_domains answers
-  )
 
-  START_ROW = 4 # FIXME add some basic logic to calculate it
+  ATTRIBS = %i[
+    version title source_file workbook source_path control_domains answers
+  ].freeze
 
   attr_accessor *ATTRIBS
 
-  def initialize(options={})
-    options.each_pair do |k,v|
-      self.send("#{k}=", v)
+  def initialize(options = {})
+    options.each_pair do |k, v|
+      send("#{k}=", v)
     end
 
     if source_path
       @workbook = RubyXL::Parser.parse(source_path)
+
+      parse_version
     end
 
     @control_domains ||= {}
@@ -38,13 +39,24 @@ class Matrix
     @source_file || File.basename(source_path)
   end
 
+  def parse_version
+    title_prefix = 'consensus assessments initiative questionnaire v'
+    first_row = workbook[0][0]
+
+    if first_row[2].value.downcase.start_with? title_prefix # version v3.0.1
+      self.version = first_row[2].value.downcase[title_prefix.length..-1]
+    elsif first_row[0].value.downcase.start_with? title_prefix # version v1.1
+      self.version = first_row[0].value.downcase[title_prefix.length..-1]
+    else # version 1.0
+      self.version = workbook[1][0][0].value[/(?<=Version )(\d+\.?)+(?= \()/]
+    end
+  end
+
   def worksheet
     workbook.worksheets.first
   end
 
-  def workbook
-    @workbook
-  end
+  attr_reader :workbook
 
   def title
     worksheet = workbook.worksheets.first
@@ -60,11 +72,11 @@ class Matrix
   end
 
   class Row
-    ATTRIBS = %i(
+    ATTRIBS = %i[
       control_domain_id control_id question_id control_spec
       question_content answer_yes answer_no answer_na comment
       control_domain_description
-    )
+    ].freeze
 
     attr_accessor *ATTRIBS
 
@@ -80,18 +92,18 @@ class Matrix
       @comment = ruby_xl_row[8].value
 
       # In 3.0.1 2017-09-01, question_id for "AIS-02.2" is listed as "AIS- 02.2"
-      %w(control_id question_id).each do |field|
-        if val = self.send(field)
-          self.send("#{field}=", val.gsub(/\s/, ""))
+      %w[control_id question_id].each do |field|
+        if val = send(field)
+          send("#{field}=", val.gsub(/\s/, ''))
         end
       end
 
       # In 3.0.1 2017-09-01, Rows 276 and 277's control ID says "LG-02" but it should be "STA-05" instead.
       if @control_id.nil? && @question_id
-        @control_id = @question_id.split(".").first
+        @control_id = @question_id.split('.').first
       end
 
-      @control_domain_id = control_id.split("-").first if @control_id
+      @control_domain_id = control_id.split('-').first if @control_id
 
       # puts "HERE IN ROW! #{ruby_xl_row.cells.map(&:value)}"
 
@@ -104,13 +116,15 @@ class Matrix
 
     def control_domain_title
       return nil if control_domain_description.nil?
-      name, _, control_title = control_domain_description.split(/(\n)/)
+
+      name, = control_domain_description.split(/(\n)/)
       name
     end
 
     def control_title
       return nil if control_domain_description.nil?
-      name, _, control_title = control_domain_description.split(/(\n)/)
+
+      _, _, control_title = control_domain_description.split(/(\n)/)
       control_title
     end
   end
@@ -119,30 +133,33 @@ class Matrix
     Row.new(worksheet[i])
   end
 
+  def self.get_start_row(version)
+    case version
+    when '1.0'
+      2
+    when '1.1'
+      3
+    when '3.0.1'
+      4
+    end
+  end
+
   def self.version_from_filepath(input_file)
     input_file[/(?<=v)[0-9\.]*(?=-)/] || 'unknown'
   end
 
-  def self.from_xlsx(version, input_file)
+  def self.from_xlsx(input_file)
     matrix = Matrix.new(
-      version: version,
       source_path: input_file
     )
 
     all_rows = matrix.worksheet.sheet_data.rows
 
-    last_control_domain = nil
-    last_control_id = nil
-    last_control_specification = nil
-
-    worksheet = matrix.worksheet
-
-    row_number = START_ROW
+    start_row = get_start_row(matrix.version)
     max_row_number = all_rows.length - 1
 
     # We loop over all Questions
-    (START_ROW..max_row_number).each do |row_number|
-
+    (start_row..max_row_number).each do |row_number|
       # puts "looping row #{row_number}"
       row = matrix.row(row_number)
       # Skip row if there is no question-id
@@ -157,10 +174,10 @@ class Matrix
       unless domain_id.nil?
 
         control_domain = matrix.control_domains[domain_id] ||
-          ControlDomain.new(
-            id: row.control_domain_id,
-            title: row.control_domain_title
-          )
+                         ControlDomain.new(
+                           id: row.control_domain_id,
+                           title: row.control_domain_title
+                         )
 
         # puts"control_domain #{control_domain.to_hash}"
 
@@ -189,11 +206,11 @@ class Matrix
       control.questions[row.question_id] = Question.new(id: row.question_id, content: row.question_content)
 
       answer = if row.answer_na
-        'NA'
-      elsif row.answer_no
-        'no'
-      elsif row.answer_yes
-        'yes'
+                 'NA'
+               elsif row.answer_no
+                 'no'
+               elsif row.answer_yes
+                 'yes'
       end
 
       matrix.answers << Answer.new(
@@ -208,7 +225,7 @@ class Matrix
   end
 
   def self.fill_answers(answers_yaml_path, template_xslt_path, output_xslt_path)
-    ccm = YAML.load(File.read(answers_yaml_path, encoding: 'UTF-8'))['ccm']
+    ccm = YAML.safe_load(File.read(answers_yaml_path, encoding: 'UTF-8'))['ccm']
     answers = ccm['answers']
     answers_hash = Hash[*answers.collect { |a| [a['question-id'], a] }.flatten]
     answers_version = ccm['metadata']['version']
@@ -225,26 +242,28 @@ class Matrix
 
     worksheet = matrix.worksheet
     all_rows = worksheet.sheet_data.rows
+
+    start_row = get_start_row(matrix.version)
     max_row_number = all_rows.length - 1
 
-    (START_ROW..max_row_number).each do |row_number|
+    (start_row..max_row_number).each do |row_number|
       question_id = worksheet[row_number][2].value
 
-      if answers_hash.key?(question_id)
-        answer = answers_hash[question_id]
-        answer_value = answer['answer']
+      next unless answers_hash.key?(question_id)
 
-        answer_col = case answer_value
-                     when 'yes', true
-                       5
-                     when 'no', false
-                       6
-                     when 'NA'
-                       7
-                     end
+      answer = answers_hash[question_id]
+      answer_value = answer['answer']
 
-        worksheet[row_number][answer_col].change_contents(answer['notes'])
-      end
+      answer_col = case answer_value
+                   when 'yes', true
+                     5
+                   when 'no', false
+                     6
+                   when 'NA'
+                     7
+                   end
+
+      worksheet[row_number][answer_col].change_contents(answer['notes'])
     end
 
     matrix.workbook.write(output_xslt_path)
@@ -255,10 +274,9 @@ class Matrix
     {
       'ccm' => {
         'metadata' => metadata.to_hash,
-        'control_domains' => control_domains.inject([]) do |acc, (k, v)|
-            acc << v.to_hash
-            acc
-          end
+        'control_domains' => control_domains.each_with_object([]) do |(_k, v), acc|
+                               acc << v.to_hash
+                             end
       }
     }
   end
@@ -267,10 +285,9 @@ class Matrix
     {
       'ccm' => {
         'metadata' => metadata.to_hash,
-        'answers' => answers.inject([]) do |acc, v|
-          acc << v.to_hash
-          acc
-        end
+        'answers' => answers.each_with_object([]) do |v, acc|
+                       acc << v.to_hash
+                     end
       }
     }
   end
@@ -286,6 +303,5 @@ class Matrix
       file.write(to_answers_hash.to_yaml)
     end
   end
-
 end
 end
