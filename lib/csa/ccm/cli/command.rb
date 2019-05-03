@@ -14,7 +14,7 @@ module Csa
         def ccm_yaml(caiq_version)
           input_files = Resource.lookup_version(caiq_version)
 
-          unless input_files || !input_files.empty?
+          unless input_files && !input_files.empty?
             UI.say("No file found for #{caiq_version} version")
             return
           end
@@ -79,7 +79,7 @@ module Csa
         option :output_file, aliases: :o, type: :string, desc: 'Optional output XSLT file. If missed, the input file’s name will be used'
 
         def generate_with_answers(answers_yaml_path)
-          unless answers_yaml_path
+          unless File.exist? answers_yaml_path
             UI.say("#{answers_yaml_path} file doesn't exists")
             return
           end
@@ -90,16 +90,21 @@ module Csa
           end
 
           template_xslt_path = options[:template_path]
-          unless options[:template_path]
+          unless template_xslt_path
             caiq_version = options[:caiq_version]
             input_files = Resource.lookup_version(caiq_version)
 
-            unless input_files || !input_files.empty?
+            unless input_files && !input_files.empty?
               UI.say("No file found for #{caiq_version} version")
               return
             end
 
             template_xslt_path = input_files.first
+          end
+
+          unless File.exist? template_xslt_path
+            UI.say("#{template_xslt_path} file doesn't exists")
+            return
           end
 
           output_file = options[:output_file]

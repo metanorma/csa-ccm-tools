@@ -1,73 +1,177 @@
 require 'spec_helper'
+require 'tempfile'
 
 RSpec.describe Csa::Ccm::Cli do
-  before(:all) do
-    FileUtils.mkdir_p './tmp'
-  end
+  gem_root = Dir.pwd
+  ccm_schema = "#{gem_root}/samples/ccm.schema.yaml"
+  answers_schema = "#{gem_root}/samples/ccm-answers.schema.yaml"
 
-  after(:all) do
-    FileUtils.rm_rf './tmp'
-    FileUtils.rm_f './caiq-3.0.1.yaml'
-    FileUtils.rm_f './resources/csa-caiq-v3.0.1-12-05-2016.yaml'
-  end
+  let(:tmpdir) { Dir.mktmpdir }
 
-  it 'has a version number' do
+  it 'csa-ccm has a version number' do
     expect(Csa::Ccm::Cli::VERSION).not_to be nil
   end
 
-  it 'command properly implemented' do
+  it 'cli command properly implemented' do
     allow(Csa::Ccm::Cli::Command).to receive(:run)
   end
 
+  it 'ccm-yaml 3.0.1 -o' do
+    output_path = "#{tmpdir}/ccm-301.yaml"
+    command = %W[ccm-yaml 3.0.1 -o #{output_path}]
+    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(File.exist?(output_path)).to be_truthy
+    validate_yaml(ccm_schema, output_path)
+  end
+
+  it 'ccm-yaml missing version' do
+    caiq_version = '1.2.3'
+    command = %W[ccm-yaml #{caiq_version}]
+    output = capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(output).to include("No file found for #{caiq_version} version")
+  end
+
+
   it 'ccm-yaml 3.0.1' do
-    command = %w[ccm-yaml 3.0.1]
-    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+    Dir.chdir tmpdir do
+      default_output_path = "./caiq-3.0.1.yaml"
+      command = %w[ccm-yaml 3.0.1]
+      capture_stdout { Csa::Ccm::Cli::Command.start(command) }
 
-    expect(File.exist?('./caiq-3.0.1.yaml')).to be_truthy
-    validate_yaml('./samples/ccm.schema.yaml', './caiq-3.0.1.yaml')
+      expect(File.exist?(default_output_path)).to be_truthy
+      validate_yaml(ccm_schema, default_output_path)
+    end
   end
 
-  it 'ccm-yaml 3.0.1 -o ccm-301.yaml' do
-    command = %w[ccm-yaml 3.0.1 -o ./tmp/ccm-301.yaml]
+  it 'xlsx2yaml xlsx' do
+    default_output_path = "#{tmpdir}/csa-caiq.yaml"
+    input_xlsx = "#{tmpdir}/csa-caiq.xlsx"
+    FileUtils.cp "#{gem_root}/resources/csa-caiq-v3.0.1-12-05-2016.xlsx", input_xlsx
+
+    command = %W[xlsx2yaml #{input_xlsx}]
     capture_stdout { Csa::Ccm::Cli::Command.start(command) }
 
-    expect(File.exist?("./tmp/ccm-301.yaml")).to be_truthy
-    validate_yaml('./samples/ccm.schema.yaml', './tmp/ccm-301.yaml')
+    expect(File.exist?(default_output_path)).to be_truthy
+    validate_yaml(ccm_schema, default_output_path)
   end
 
-  it 'xlsx2yaml ./resources/csa-caiq-v3.0.1-12-05-2016.xlsx' do
-    command = %w[xlsx2yaml ./resources/csa-caiq-v3.0.1-12-05-2016.xlsx]
+  it 'xlsx2yaml xlsx -o' do
+    output_path = "#{tmpdir}/ccm-301-2.yaml"
+    command = %W[xlsx2yaml ./resources/csa-caiq-v3.0.1-09-01-2017.xlsx -o #{output_path}]
     capture_stdout { Csa::Ccm::Cli::Command.start(command) }
 
-    expect(File.exist?('./resources/csa-caiq-v3.0.1-12-05-2016.yaml')).to be_truthy
-    validate_yaml('./samples/ccm.schema.yaml', './resources/csa-caiq-v3.0.1-12-05-2016.yaml')
+    expect(File.exist?(output_path)).to be_truthy
+    validate_yaml(ccm_schema, output_path)
   end
 
-  it 'xlsx2yaml ./resources/csa-caiq-v3.0.1-12-05-2016.xlsx -o ./tmp/ccm-301-2.yaml' do
-    command = %w[xlsx2yaml ./resources/csa-caiq-v3.0.1-12-05-2016.xlsx -o ./tmp/ccm-301-2.yaml]
-    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+  it 'caiq2yaml xlsx' do
+    Dir.chdir tmpdir do
+      output_answers_path = "./csa-caiq-v3.0.1-12-05-2016.answers.yaml"
+      output_control_path = "./csa-caiq-v3.0.1-12-05-2016.control.yaml"
+      input_xlsx = "#{gem_root}/resources/csa-caiq-v3.0.1-12-05-2016.xlsx"
+      FileUtils.cp input_xlsx, tmpdir
 
-    expect(File.exist?('./tmp/ccm-301-2.yaml')).to be_truthy
-    validate_yaml('./samples/ccm.schema.yaml', './tmp/ccm-301-2.yaml')
+      command = %W[caiq2yaml #{input_xlsx}]
+      capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+      expect(File.exist?(output_control_path)).to be_truthy
+      expect(File.exist?(output_answers_path)).to be_truthy
+
+      validate_yaml(ccm_schema, output_control_path)
+      validate_yaml(answers_schema, output_answers_path)
+    end
   end
 
-  it 'caiq2yaml ./resources/csa-caiq-v3.0.1-09-01-2017.xlsx' do
-    command = %w[caiq2yaml ./resources/csa-caiq-v3.0.1-09-01-2017.xlsx -n test -p ./tmp]
-    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+  it 'caiq2yaml xlsx -n' do
+    Dir.chdir tmpdir do
+      output_name = "test"
+      output_answers_path = "#{tmpdir}/#{output_name}.answers.yaml"
+      output_control_path = "#{tmpdir}/#{output_name}.control.yaml"
+      input_xlsx = "#{gem_root}/resources/csa-caiq-v3.0.1-09-01-2017.xlsx"
+      FileUtils.cp input_xlsx, tmpdir
 
-    expect(File.exist?('./tmp/test.control.yaml')).to be_truthy
-    expect(File.exist?('./tmp/test.answers.yaml')).to be_truthy
+      command = %W[caiq2yaml #{input_xlsx} -n #{output_name}]
+      capture_stdout { Csa::Ccm::Cli::Command.start(command) }
 
-    validate_yaml('./samples/ccm.schema.yaml', './tmp/test.control.yaml')
-    validate_yaml('./samples/ccm-answers.schema.yaml', './tmp/test.answers.yaml')
+      expect(File.exist?(output_control_path)).to be_truthy
+      expect(File.exist?(output_answers_path)).to be_truthy
+
+      validate_yaml(ccm_schema, output_control_path)
+      validate_yaml(answers_schema, output_answers_path)
+    end
   end
 
-  it 'generate-with-answers ./samples/ccm-answers.yaml -o ./tmp/ccm-answers.xlsx' do
-    command = %w[generate-with-answers ./samples/ccm-answers.yaml -o ./tmp/ccm-answers.xlsx]
+  it 'caiq2yaml xlsx -p' do
+    output_name = "csa-caiq-v3.0.1-12-05-2016"
+    output_answers_path = "#{tmpdir}/#{output_name}.answers.yaml"
+    output_control_path = "#{tmpdir}/#{output_name}.control.yaml"
+    input_xlsx = "#{gem_root}/resources/#{output_name}.xlsx"
+
+    command = %W[caiq2yaml #{input_xlsx} -p #{tmpdir}]
     capture_stdout { Csa::Ccm::Cli::Command.start(command) }
 
-    expect(File.exist?('./tmp/ccm-answers.xlsx')).to be_truthy
-    expect(File.size?('./tmp/ccm-answers.xlsx')).to be > 0
+    expect(File.exist?(output_control_path)).to be_truthy
+    expect(File.exist?(output_answers_path)).to be_truthy
+
+    validate_yaml(ccm_schema, output_control_path)
+    validate_yaml(answers_schema, output_answers_path)
+  end
+
+  it 'caiq2yaml xlsx -n -p' do
+    output_name = "result"
+    output_answers_path = "#{tmpdir}/#{output_name}.answers.yaml"
+    output_control_path = "#{tmpdir}/#{output_name}.control.yaml"
+
+    command = %W[caiq2yaml ./resources/csa-caiq-v3.0.1-09-01-2017.xlsx -n #{output_name} -p #{tmpdir}]
+    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(File.exist?(output_control_path)).to be_truthy
+    expect(File.exist?(output_answers_path)).to be_truthy
+
+    validate_yaml(ccm_schema, output_control_path)
+    validate_yaml(answers_schema, output_answers_path)
+  end
+
+  it 'generate-with-answers yaml -o' do
+    command = %W[generate-with-answers ./samples/ccm-answers.yaml -o #{tmpdir}/ccm-answers.xlsx]
+    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(File.exist?("#{tmpdir}/ccm-answers.xlsx")).to be_truthy
+    expect(File.size?("#{tmpdir}/ccm-answers.xlsx")).to be > 0
+  end
+
+  it 'generate-with-answers yaml -o -r' do
+    command = %W[generate-with-answers ./samples/ccm-answers.yaml -r 3.0.1 -o #{tmpdir}/ccm-answers.xlsx]
+    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(File.exist?("#{tmpdir}/ccm-answers.xlsx")).to be_truthy
+    expect(File.size?("#{tmpdir}/ccm-answers.xlsx")).to be > 0
+  end
+
+  it 'generate-with-answers yaml -o -t' do
+    command = %W[generate-with-answers ./samples/ccm-answers.yaml -t ./resources/csa-caiq-v3.0.1-12-05-2016.xlsx -o #{tmpdir}/ccm-answers.xlsx]
+    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(File.exist?("#{tmpdir}/ccm-answers.xlsx")).to be_truthy
+    expect(File.size?("#{tmpdir}/ccm-answers.xlsx")).to be > 0
+  end
+
+  it 'generate-with-answers yaml missing version' do
+    caiq_version = '1.2.3'
+    command = %W[generate-with-answers ./samples/ccm-answers.yaml -r #{caiq_version} -o #{tmpdir}/ccm-answers.xlsx]
+    output = capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(output).to include("No file found for #{caiq_version} version")
+  end
+
+  it 'generate-with-answers xlsx not exists' do
+    caiq_version = '1.2.3'
+    command = %W[generate-with-answers missing.yaml -o #{tmpdir}/ccm-answers.xlsx]
+    output = capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(output).to include("file doesn't exists")
   end
 
   def validate_yaml(schema_path, validatable_path)
