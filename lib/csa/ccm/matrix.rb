@@ -197,22 +197,29 @@ class Matrix
       end
 
       matrix.answers << Answer.new(
-          question_id: row.question_id,
-          control_id: control_id,
-          answer: answer,
-          comment: row.comment
-        )
+        question_id: row.question_id,
+        control_id: control_id,
+        answer: answer,
+        comment: row.comment
+      )
     end
 
     matrix
   end
 
   def self.fill_answers(answers_yaml_path, template_xslt_path, output_xslt_path)
-    answers = YAML.load(File.read(answers_yaml_path, encoding: 'UTF-8'))['ccm']['answers']
+    ccm = YAML.load(File.read(answers_yaml_path, encoding: 'UTF-8'))['ccm']
+    answers = ccm['answers']
     answers_hash = Hash[*answers.collect { |a| [a['question-id'], a] }.flatten]
+    answers_version = ccm['metadata']['version']
+    template_version = version_from_filepath(template_xslt_path)
+
+    unless template_version == answers_version
+      raise "Template XLSX & answers YAML version missmatch #{template_version} vs. #{answers_version}"
+    end
 
     matrix = Matrix.new(
-      version: version_from_filepath(template_xslt_path),
+      version: template_version,
       source_path: template_xslt_path
     )
 
@@ -228,13 +235,9 @@ class Matrix
         answer_value = answer['answer']
 
         answer_col = case answer_value
-                     when 'yes'
+                     when 'yes', true
                        5
-                     when true
-                       5
-                     when 'no'
-                       6
-                     when false
+                     when 'no', false
                        6
                      when 'NA'
                        7
