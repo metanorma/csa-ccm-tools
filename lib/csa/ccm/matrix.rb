@@ -26,7 +26,7 @@ class Matrix
     if source_path
       @workbook = RubyXL::Parser.parse(source_path)
 
-      parse_version
+      parse_version if version.nil?
     end
 
     @control_domains ||= {}
@@ -139,7 +139,8 @@ class Matrix
       2
     when '1.1'
       3
-    when '3.0.1'
+    else
+      # '3.0.1' and assume beyond
       4
     end
   end

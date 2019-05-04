@@ -57,7 +57,6 @@ module Csa
             return
           end
 
-          version = Matrix.version_from_filepath(input_xlsx_file)
           matrix = Matrix.from_xlsx(input_xlsx_file)
 
           base_output_file = options[:output_name] || File.basename(input_xlsx_file.gsub('.xlsx', ''))
@@ -83,7 +82,7 @@ module Csa
             return
           end
 
-          unless options[:template_path] || options[:caiq_version] 
+          unless options[:template_path] || options[:caiq_version]
             UI.say("No input template specified by -r or -t")
             return
           end
