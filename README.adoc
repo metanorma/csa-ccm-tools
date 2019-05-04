@@ -1,5 +1,7 @@
 = CSA CCM Tools
 
+image:https://travis-ci.com/metanorma/csa-ccm-tools.svg?branch=master["Build Status", link="https://travis-ci.com/metanorma/csa-ccm-tools"]
+
 This gem is used for the parsing and writing of the CSA CCM
 located at https://cloudsecurityalliance.org/working-groups/cloud-controls-matrix.
 
