@@ -1,7 +1,17 @@
----
-sudo: false
+# Auto-generated !!! Do not edit it manually
+# use ci-master https://github.com/metanorma/metanorma-build-scripts
 language: ruby
 cache: bundler
+os:
+- linux
+- osx
 rvm:
-  - 2.4.3
-before_install: gem install bundler -v 1.17.1
+- 2.5
+- 2.4
+- ruby-head
+before_install: 
+- gem install bundler -v 2.0.1
+- bundle update
+matrix:
+  allow_failures:
+    - rvm: ruby-head
