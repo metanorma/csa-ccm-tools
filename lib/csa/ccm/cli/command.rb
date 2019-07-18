@@ -49,7 +49,8 @@ module Csa
 
         desc "caiq2yaml XLSX_PATH", "Converting a filled CAIQ to YAML"
         option :output_name, aliases: :n, type: :string, desc: "Optional output CAIQ YAML file. If missed, the input file’s name will be used"
-        option :output_path, aliases: :p, type: :string, desc: "Optional output directory for result file. If missed pwd will be used"
+        option :output_path, aliases: :p, type: :string, desc: "Optional output directory for result file. If missed, pwd will be used"
+        option :skip_comment, aliases: :s, type: :boolean, desc: "[true|false] Optional skip comments in result file. if missed, comments are retained"
 
         def caiq2yaml(input_xlsx_file)
           unless input_xlsx_file
@@ -68,7 +69,7 @@ module Csa
           answers_output_file = "#{base_output_file}.answers.yaml"
 
           matrix.to_control_file(control_output_file)
-          matrix.to_answers_file(answers_output_file)
+          matrix.to_answers_file(answers_output_file, !!options[:skip_comment])
         end
 
         desc "generate-with-answers ANSWERS_YAML", "Writing to the CAIQ XSLX template using YAML"

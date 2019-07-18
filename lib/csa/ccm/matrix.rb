@@ -282,12 +282,16 @@ class Matrix
     }
   end
 
-  def to_answers_hash
+  def to_answers_hash(skip_comment)
     {
       'ccm' => {
         'metadata' => metadata.to_hash,
         'answers' => answers.each_with_object([]) do |v, acc|
-                       acc << v.to_hash
+                       answer = v.to_hash
+                       if skip_comment
+                        answer = answer.reject{|key, val| key == "comment"} 
+                       end
+                       acc << answer
                      end
       }
     }
@@ -299,9 +303,9 @@ class Matrix
     end
   end
 
-  def to_answers_file(filename)
+  def to_answers_file(filename, skip_comment)
     File.open(filename, 'w') do |file|
-      file.write(to_answers_hash.to_yaml)
+      file.write(to_answers_hash(skip_comment).to_yaml)
     end
   end
 end

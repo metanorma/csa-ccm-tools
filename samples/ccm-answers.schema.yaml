@@ -15,7 +15,7 @@ required:
           type: "//rec"
           optional: # FIXME they should not be optional
             answer: "//str"
-            notes: "//str"
+            comment: "//str"
           required:
             control_id: "//str"
             question_id: "//str"

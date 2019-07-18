@@ -119,6 +119,27 @@ RSpec.describe Csa::Ccm::Cli do
     validate_yaml(answers_schema, output_answers_path)
   end
 
+  it 'caiq2yaml xlsx -s' do
+    Dir.chdir tmpdir do
+      output_name = "csa-caiq-v3.0.1-09-01-2017-filled"
+      output_answers_path = "#{tmpdir}/#{output_name}.answers.yaml"
+      output_control_path = "#{tmpdir}/#{output_name}.control.yaml"
+      input_xlsx = "#{gem_root}/resources/#{output_name}.xlsx"
+      FileUtils.cp input_xlsx, tmpdir
+
+      command = %W[caiq2yaml #{input_xlsx} -s true]
+      capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+      expect(File.exist?(output_control_path)).to be_truthy
+      expect(File.exist?(output_answers_path)).to be_truthy
+
+      validate_yaml(ccm_schema, output_control_path)
+      validate_yaml(answers_schema, output_answers_path)
+
+      expect(skip_comments?(output_answers_path)).to be_truthy
+    end
+  end
+
   it 'caiq2yaml xlsx -n -p' do
     output_name = "result"
     output_answers_path = "#{tmpdir}/#{output_name}.answers.yaml"
@@ -182,5 +203,19 @@ RSpec.describe Csa::Ccm::Cli do
 
     schema = rx.make_schema(YAML.load(schema))
     schema.check!(YAML.load(validatable))
+  end
+
+  def skip_comments?(output_answers_path)
+    output_answers_file = File.read(output_answers_path, encoding: 'UTF-8')
+    yml = YAML.load(output_answers_file)
+    skipped = true
+
+    yml["ccm"]["answers"].each do |ans|
+      if ans.has_key?("comment")
+        skipped = false
+      end
+    end
+
+    skipped
   end
 end

@@ -91,13 +91,13 @@ This is an example of the extracted CAIQ YAML: link:samples/ccm.yaml[]
 
 [source,sh]
 ----
-$ csa-ccm caiq2yaml {CAIQ_input.xlsx} [-n optional-name] [-p optional-path]
+$ csa-ccm caiq2yaml {CAIQ_input.xlsx} [-n optional-name] [-p optional-path] [-s true|false]
 ----
 
 e.g.
 [source,sh]
 ----
-$ csa-ccm caiq2yaml my-providers-caiq.xlsx -n my-caiq -p ../
+$ csa-ccm caiq2yaml my-providers-caiq.xlsx -n my-caiq -p ../ -s true
 ----
 
 Where,
