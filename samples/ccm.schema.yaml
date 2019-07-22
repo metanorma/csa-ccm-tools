@@ -8,8 +8,8 @@ required:
         required:
           version: "//str"
           title: "//str"
-          source_file: "//str"
-      control_domains:
+          source-file: "//str"
+      control-domains:
         type: "//arr"
         contents:
           type: "//rec"

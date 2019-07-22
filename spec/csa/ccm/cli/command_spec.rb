@@ -155,6 +155,14 @@ RSpec.describe Csa::Ccm::Cli do
     validate_yaml(answers_schema, output_answers_path)
   end
 
+  it 'generate-with-answers yaml' do
+    command = %w[generate-with-answers samples/ccm-answers.yaml]
+    capture_stdout { Csa::Ccm::Cli::Command.start(command) }
+
+    expect(File.exist?('samples/ccm-answers.xlsx')).to be_truthy
+    expect(File.size?('samples/ccm-answers.xlsx')).to be > 0
+  end
+
   it 'generate-with-answers yaml -o' do
     command = %W[generate-with-answers ./samples/ccm-answers.yaml -o #{tmpdir}/ccm-answers.xlsx]
     capture_stdout { Csa::Ccm::Cli::Command.start(command) }
@@ -187,7 +195,7 @@ RSpec.describe Csa::Ccm::Cli do
     expect(output).to include("No file found for #{caiq_version} version")
   end
 
-  it 'generate-with-answers xlsx not exists' do
+  it 'generate-with-answers yaml not exists' do
     caiq_version = '1.2.3'
     command = %W[generate-with-answers missing.yaml -o #{tmpdir}/ccm-answers.xlsx]
     output = capture_stdout { Csa::Ccm::Cli::Command.start(command) }
