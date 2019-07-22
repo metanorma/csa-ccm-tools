@@ -100,6 +100,16 @@ module Csa
               return
             end
 
+            input_files.sort! do |a, b|
+              date_str_a = a.match(/\d\d-\d\d-\d\d\d\d/)[0].to_s
+              date_str_b = b.match(/\d\d-\d\d-\d\d\d\d/)[0].to_s
+
+              date_a = DateTime.parse date_str_a, 'dd-mm-YYYY'
+              date_b = DateTime.parse date_str_b, 'dd-mm-YYYY'
+
+              date_b <=> date_a
+            end
+
             template_xslt_path = input_files.first
           end
 
