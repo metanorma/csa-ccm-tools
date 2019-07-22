@@ -2,6 +2,7 @@ require_relative 'control_domain'
 require_relative 'control'
 require_relative 'question'
 require_relative 'answer'
+require_relative 'answers'
 
 require 'rubyXL'
 require 'rubyXL/convenience_methods/cell'
@@ -30,7 +31,7 @@ class Matrix
     end
 
     @control_domains ||= {}
-    @answers ||= []
+    @answers ||= Answers.new
 
     self
   end
@@ -67,7 +68,7 @@ class Matrix
     {
       'version' => version,
       'title' => title,
-      'source_file' => source_file
+      'source-file' => source_file
     }
   end
 
@@ -133,7 +134,7 @@ class Matrix
     Row.new(worksheet[i])
   end
 
-  def self.get_start_row(version)
+  def get_start_row(version)
     case version
     when '1.0'
       2
@@ -145,10 +146,6 @@ class Matrix
     end
   end
 
-  def self.version_from_filepath(input_file)
-    input_file[/(?<=v)[0-9\.]*(?=-)/] || 'unknown'
-  end
-
   def self.from_xlsx(input_file)
     matrix = Matrix.new(
       source_path: input_file
@@ -156,7 +153,7 @@ class Matrix
 
     all_rows = matrix.worksheet.sheet_data.rows
 
-    start_row = get_start_row(matrix.version)
+    start_row = matrix.get_start_row(matrix.version)
     max_row_number = all_rows.length - 1
 
     # We loop over all Questions
@@ -169,8 +166,6 @@ class Matrix
       # binding.pry
       next if row.question_id.nil?
 
-      # puts"domain_id #{row.control_domain_id}"
-
       domain_id = row.control_domain_id
       unless domain_id.nil?
 
@@ -179,8 +174,6 @@ class Matrix
                            id: row.control_domain_id,
                            title: row.control_domain_title
                          )
-
-        # puts"control_domain #{control_domain.to_hash}"
 
         # Store the Control Domain
         matrix.control_domains[domain_id] = control_domain
@@ -196,14 +189,11 @@ class Matrix
           specification: row.control_spec
         )
 
-        # puts"control #{control.to_hash}"
         # Store the Control
         control_domain.controls[control_id] = control
       end
 
-      question = matrix.control_domains[domain_id].controls[control_id]
       # Store the Question
-      # putsquestion.to_hash
       control.questions[row.question_id] = Question.new(id: row.question_id, content: row.question_content)
 
       answer = if row.answer_na
@@ -212,7 +202,7 @@ class Matrix
                  'no'
                elsif row.answer_yes
                  'yes'
-      end
+               end
 
       matrix.answers << Answer.new(
         question_id: row.question_id,
@@ -222,77 +212,18 @@ class Matrix
       )
     end
 
+    matrix.answers.metadata = matrix.metadata
+
     matrix
-  end
-
-  def self.fill_answers(answers_yaml_path, template_xslt_path, output_xslt_path)
-    ccm = YAML.safe_load(File.read(answers_yaml_path, encoding: 'UTF-8'))['ccm']
-    answers = ccm['answers']
-    answers_hash = Hash[*answers.collect { |a| [a['question-id'], a] }.flatten]
-    answers_version = ccm['metadata']['version']
-    template_version = version_from_filepath(template_xslt_path)
-
-    unless template_version == answers_version
-      raise "Template XLSX & answers YAML version missmatch #{template_version} vs. #{answers_version}"
-    end
-
-    matrix = Matrix.new(
-      version: template_version,
-      source_path: template_xslt_path
-    )
-
-    worksheet = matrix.worksheet
-    all_rows = worksheet.sheet_data.rows
-
-    start_row = get_start_row(matrix.version)
-    max_row_number = all_rows.length - 1
-
-    (start_row..max_row_number).each do |row_number|
-      question_id = worksheet[row_number][2].value
-
-      next unless answers_hash.key?(question_id)
-
-      answer = answers_hash[question_id]
-      answer_value = answer['answer']
-
-      answer_col = case answer_value
-                   when 'yes', true
-                     5
-                   when 'no', false
-                     6
-                   when 'NA'
-                     7
-                   end
-
-      worksheet[row_number][answer_col].change_contents(answer['notes'])
-    end
-
-    matrix.workbook.write(output_xslt_path)
-    worksheet
   end
 
   def to_control_hash
     {
       'ccm' => {
         'metadata' => metadata.to_hash,
-        'control_domains' => control_domains.each_with_object([]) do |(_k, v), acc|
+        'control-domains' => control_domains.each_with_object([]) do |(_k, v), acc|
                                acc << v.to_hash
                              end
-      }
-    }
-  end
-
-  def to_answers_hash(skip_comment)
-    {
-      'ccm' => {
-        'metadata' => metadata.to_hash,
-        'answers' => answers.each_with_object([]) do |v, acc|
-                       answer = v.to_hash
-                       if skip_comment
-                        answer = answer.reject{|key, val| key == "comment"} 
-                       end
-                       acc << answer
-                     end
       }
     }
   end
@@ -300,12 +231,6 @@ class Matrix
   def to_control_file(filename)
     File.open(filename, 'w') do |file|
       file.write(to_control_hash.to_yaml)
-    end
-  end
-
-  def to_answers_file(filename, skip_comment)
-    File.open(filename, 'w') do |file|
-      file.write(to_answers_hash(skip_comment).to_yaml)
     end
   end
 end

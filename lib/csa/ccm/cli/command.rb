@@ -3,6 +3,8 @@ require 'thor'
 
 require_relative 'ui'
 require_relative '../cli'
+require_relative '../matrix'
+require_relative '../answers'
 
 module Csa
   module Ccm
@@ -69,7 +71,7 @@ module Csa
           answers_output_file = "#{base_output_file}.answers.yaml"
 
           matrix.to_control_file(control_output_file)
-          matrix.to_answers_file(answers_output_file, !!options[:skip_comment])
+          matrix.answers.to_file(answers_output_file, options[:skip_comment])
         end
 
         desc "generate-with-answers ANSWERS_YAML", "Writing to the CAIQ XSLX template using YAML"
@@ -108,10 +110,18 @@ module Csa
 
           output_file = options[:output_file]
           unless options[:output_file]
-            output_file = "#{answers_yaml_path.gsub('answers.yaml', '')}.xlsx"
+            output_file = answers_yaml_path.gsub('.yaml', '.xlsx')
           end
 
-          Matrix.fill_answers(answers_yaml_path, template_xslt_path, output_file)
+          answers = Answers.new(source_path: answers_yaml_path)
+          matrix = Matrix.new(source_path: template_xslt_path)
+
+          unless matrix.version == answers.version
+            raise "Template XLSX & answers YAML version missmatch #{matrix.version} vs. #{answers.version}"
+          end
+
+          answers.apply_to(matrix)
+          matrix.workbook.write(output_file)
         end
       end
     end

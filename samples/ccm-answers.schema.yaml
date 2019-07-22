@@ -8,14 +8,14 @@ required:
         required:
           version: "//str"
           title: "//str"
-          source_file: "//str"
+          source-file: "//str"
       answers:
         type: "//arr"
         contents:
           type: "//rec"
-          optional: # FIXME they should not be optional
+          optional:
             answer: "//str"
             comment: "//str"
+            control-id: "//str"
           required:
-            control_id: "//str"
-            question_id: "//str"
+            question-id: "//str"

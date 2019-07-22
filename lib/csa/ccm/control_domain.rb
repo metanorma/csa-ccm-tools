@@ -11,7 +11,7 @@ class ControlDomain
 
   def initialize(options={})
     options.each_pair do |k,v|
-      self.send("#{k}=", v)
+      self.send("#{k.to_s.tr('-', '_')}=", v)
     end
 
     @controls ||= {}
@@ -28,7 +28,7 @@ class ControlDomain
           value = value.values.map(&:to_hash)
         end
 
-        acc.merge(attrib.to_s => value)
+        acc.merge(attrib.to_s.tr('-', '_') => value)
       else
         acc
       end
@@ -36,7 +36,7 @@ class ControlDomain
   end
 
   def to_file(filename)
-    File.open(filename,"w") do |file|
+    File.open(filename, "w") do |file|
       file.write(to_hash.to_yaml)
     end
   end
