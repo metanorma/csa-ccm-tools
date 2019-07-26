@@ -1,7 +1,7 @@
 require_relative 'control_domain'
 require_relative 'control'
 require_relative 'question'
-require_relative 'answers'
+require_relative 'answer_collection'
 require_relative 'matrix_row'
 
 require 'rubyXL'
@@ -24,14 +24,10 @@ class Matrix
       send("#{k}=", v)
     end
 
-    if source_path
-      @workbook = RubyXL::Parser.parse(source_path)
-
-      parse_version if version.nil?
-    end
-
     @control_domains ||= {}
-    @answers ||= Answers.new
+    @answers ||= AnswerCollection.new
+
+    parse_version if @workbook
 
     self
   end
@@ -104,10 +100,10 @@ class Matrix
   def apply_answers(answers)
 
     unless @version == answers.version
-      raise "Matrix & Answers version mismatch (Matrix: #{matrix.version}, Answers: #{answers.version})"
+      raise "Matrix & AnswerCollection version mismatch (Matrix: #{matrix.version}, AnswerCollection: #{answers.version})"
     end
 
-    # TODO: we should loop through all Answers, not all Questions
+    # TODO: we should loop through all AnswerCollection, not all Questions
     all_rows = worksheet.sheet_data.rows
 
     start_row = get_start_row(@version)
@@ -148,6 +144,7 @@ class Matrix
 
   def self.from_xlsx(input_file)
     matrix = Matrix.new(
+      workbook: RubyXL::Parser.parse(input_file),
       source_path: input_file
     )
 

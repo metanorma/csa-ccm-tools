@@ -4,7 +4,7 @@ require 'thor'
 require_relative 'ui'
 require_relative '../cli'
 require_relative '../matrix'
-require_relative '../answers'
+require_relative '../answer_collection'
 
 module Csa
   module Ccm
@@ -92,8 +92,8 @@ module Csa
             return
           end
 
-          template_xslt_path = options[:template_path]
-          unless template_xslt_path
+          template_xlsx_path = options[:template_path]
+          unless template_xlsx_path
             caiq_version = options[:caiq_version]
             input_files = Resource.lookup_version(caiq_version)
 
@@ -112,11 +112,11 @@ module Csa
               date_b <=> date_a
             end
 
-            template_xslt_path = input_files.first
+            template_xlsx_path = input_files.first
           end
 
-          unless File.exist? template_xslt_path
-            UI.say("#{template_xslt_path} file doesn't exists")
+          unless File.exist? template_xlsx_path
+            UI.say("#{template_xlsx_path} file doesn't exists")
             return
           end
 
@@ -125,8 +125,8 @@ module Csa
             output_file = answers_yaml_path.gsub('.yaml', '.xlsx')
           end
 
-          answers = Answers.from_yaml(answers_yaml_path)
-          matrix = Matrix.new(source_path: template_xslt_path)
+          answers = AnswerCollection.from_yaml(answers_yaml_path)
+          matrix = Matrix.from_xlsx(template_xlsx_path)
 
           matrix.apply_answers(answers)
           matrix.to_xlsx(output_file)
