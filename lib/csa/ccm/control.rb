@@ -34,9 +34,13 @@ class Control
     end
   end
 
+  def to_yaml
+    to_hash.to_yaml
+  end
+
   def to_file(filename)
     File.open(filename,"w") do |file|
-      file.write(to_hash.to_yaml)
+      file.write(to_yaml)
     end
   end
 
