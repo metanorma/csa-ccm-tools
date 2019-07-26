@@ -62,7 +62,9 @@ module Csa
 
           matrix = Matrix.from_xlsx(input_xlsx_file)
 
-          base_output_file = options[:output_name] || File.basename(input_xlsx_file.gsub('.xlsx', ''))
+          base_output_file = options[:output_name] ||
+            File.basename(input_xlsx_file.gsub('.xlsx', ''))
+
           if options[:output_path]
             base_output_file = File.join(options[:output_path], base_output_file)
           end
@@ -123,15 +125,11 @@ module Csa
             output_file = answers_yaml_path.gsub('.yaml', '.xlsx')
           end
 
-          answers = Answers.new(source_path: answers_yaml_path)
+          answers = Answers.from_yaml(answers_yaml_path)
           matrix = Matrix.new(source_path: template_xslt_path)
 
-          unless matrix.version == answers.version
-            raise "Template XLSX & answers YAML version missmatch #{matrix.version} vs. #{answers.version}"
-          end
-
-          answers.apply_to(matrix)
-          matrix.workbook.write(output_file)
+          matrix.apply_answers(answers)
+          matrix.to_xlsx(output_file)
         end
       end
     end

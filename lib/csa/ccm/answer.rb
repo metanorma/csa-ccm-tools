@@ -23,10 +23,12 @@ class Answer
     question_id <=> other.question_id
   end
 
-  def to_hash(skip_comment)
-    ATTRIBS.inject({}) do |acc, attrib|
+  def to_hash(skip_comment = true)
+    attribs = skip_comment ? ATTRIBS - [:comment] : ATTRIBS
+
+    attribs.inject({}) do |acc, attrib|
       value = send(attrib)
-      if value.nil? || (attrib == :comment && skip_comment)
+      if value.nil?
         acc
       else
         acc.merge(attrib.to_s.tr('_', '-') => value)

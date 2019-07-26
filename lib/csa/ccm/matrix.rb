@@ -1,8 +1,8 @@
 require_relative 'control_domain'
 require_relative 'control'
 require_relative 'question'
-require_relative 'answer'
 require_relative 'answers'
+require_relative 'matrix_row'
 
 require 'rubyXL'
 require 'rubyXL/convenience_methods/cell'
@@ -45,11 +45,11 @@ class Matrix
     first_row = workbook[0][0]
 
     if first_row[2].value.downcase.start_with? title_prefix # version v3.0.1
-      self.version = first_row[2].value.downcase[title_prefix.length..-1]
+      @version = first_row[2].value.downcase[title_prefix.length..-1]
     elsif first_row[0].value.downcase.start_with? title_prefix # version v1.1
-      self.version = first_row[0].value.downcase[title_prefix.length..-1]
+      @version = first_row[0].value.downcase[title_prefix.length..-1]
     else # version 1.0
-      self.version = workbook[1][0][0].value[/(?<=Version )(\d+\.?)+(?= \()/]
+      @version = workbook[1][0][0].value[/(?<=Version )(\d+\.?)+(?= \()/]
     end
   end
 
@@ -60,7 +60,6 @@ class Matrix
   attr_reader :workbook
 
   def title
-    worksheet = workbook.worksheets.first
     worksheet[0][2].value
   end
 
@@ -72,66 +71,8 @@ class Matrix
     }
   end
 
-  class Row
-    ATTRIBS = %i[
-      control_domain_id control_id question_id control_spec
-      question_content answer_yes answer_no answer_na comment
-      control_domain_description
-    ].freeze
-
-    attr_accessor *ATTRIBS
-
-    def initialize(ruby_xl_row)
-      @control_domain_description = ruby_xl_row[0].value
-      @control_id = ruby_xl_row[1].value
-      @question_id = ruby_xl_row[2].value
-      @control_spec = ruby_xl_row[3].value
-      @question_content = ruby_xl_row[4].value
-      @answer_yes = ruby_xl_row[5].value
-      @answer_no = ruby_xl_row[6].value
-      @answer_na = ruby_xl_row[7].value
-      @comment = ruby_xl_row[8].value
-
-      # In 3.0.1 2017-09-01, question_id for "AIS-02.2" is listed as "AIS- 02.2"
-      %w[control_id question_id].each do |field|
-        if val = send(field)
-          send("#{field}=", val.gsub(/\s/, ''))
-        end
-      end
-
-      # In 3.0.1 2017-09-01, Rows 276 and 277's control ID says "LG-02" but it should be "STA-05" instead.
-      if @control_id.nil? && @question_id
-        @control_id = @question_id.split('.').first
-      end
-
-      @control_domain_id = control_id.split('-').first if @control_id
-
-      # puts "HERE IN ROW! #{ruby_xl_row.cells.map(&:value)}"
-
-      # puts control_domain_description
-      # puts control_id
-      # puts question_id
-
-      self
-    end
-
-    def control_domain_title
-      return nil if control_domain_description.nil?
-
-      name, = control_domain_description.split(/(\n)/)
-      name
-    end
-
-    def control_title
-      return nil if control_domain_description.nil?
-
-      _, _, control_title = control_domain_description.split(/(\n)/)
-      control_title
-    end
-  end
-
   def row(i)
-    Row.new(worksheet[i])
+    MatrixRow.new(worksheet[i])
   end
 
   def get_start_row(version)
@@ -145,6 +86,65 @@ class Matrix
       4
     end
   end
+
+  def answer_column_num(value)
+    case value
+    when 'yes', true
+      5
+    when 'no', false
+      6
+    when 'NA'
+      7
+    end
+  end
+
+  NOTES_COLUMN_NUM = 8 # Column 'I' in 3.0.1
+  COLUMN_MARK_SYMBOL = 'x'
+
+  def apply_answers(answers)
+
+    unless @version == answers.version
+      raise "Matrix & Answers version mismatch (Matrix: #{matrix.version}, Answers: #{answers.version})"
+    end
+
+    # TODO: we should loop through all Answers, not all Questions
+    all_rows = worksheet.sheet_data.rows
+
+    start_row = get_start_row(@version)
+    max_row_number = all_rows.length - 1
+
+    (start_row..max_row_number).each do |row_number|
+      question_id = worksheet[row_number][2].value
+
+      answer = answers[question_id]
+      next unless answer
+
+      # puts '___________________________'
+      # puts question_id
+      # puts answer.inspect
+
+      if answer.answer
+        answer_col = answer_column_num(answer.answer)
+        # puts "filling in answer #{worksheet[row_number][answer_col]} to #{answer.answer} as '#{COLUMN_MARK_SYMBOL}'"
+        worksheet[row_number][answer_col].change_contents(COLUMN_MARK_SYMBOL)
+      end
+
+      if answer.comment
+        # puts "filling in answer comment #{worksheet[row_number][NOTES_COLUMN_NUM]} to #{answer.comment}"
+        worksheet[row_number][NOTES_COLUMN_NUM].change_contents(answer.comment)
+      end
+
+      # puts "Answer is now #{worksheet[row_number][answer_col].raw_value} and #{worksheet[row_number][NOTES_COLUMN_NUM].raw_value}"
+      # puts '___________________________'
+
+    end
+
+    self
+  end
+
+  # Add single answer, fill in to XLSX
+  # def add_answer(answer)
+  # end
 
   def self.from_xlsx(input_file)
     matrix = Matrix.new(
@@ -194,7 +194,10 @@ class Matrix
       end
 
       # Store the Question
-      control.questions[row.question_id] = Question.new(id: row.question_id, content: row.question_content)
+      control.questions[row.question_id] = Question.new(
+        id: row.question_id,
+        content: row.question_content
+      )
 
       answer = if row.answer_na
                  'NA'
@@ -233,5 +236,10 @@ class Matrix
       file.write(to_control_hash.to_yaml)
     end
   end
+
+  def to_xlsx(filename)
+    workbook.write(filename)
+  end
+
 end
 end
