@@ -2,7 +2,7 @@ require_relative 'answer'
 
 module Csa::Ccm
 
-class Answers
+class AnswerCollection
 
   ATTRIBS = %i[
     version answers source_path metadata
