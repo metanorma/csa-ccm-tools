@@ -39,7 +39,7 @@ GEM
     rubyXL (3.4.5)
       nokogiri (>= 1.4.4)
       rubyzip (>= 1.1.6)
-    rubyzip (1.2.3)
+    rubyzip (2.0.0)
     thor (0.20.3)
     unicode_utils (1.4.0)
 
