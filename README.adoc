@@ -1,8 +1,6 @@
 = CSA CCM Tools
 
-image:https://github.com/metanorma/csa-ccm-tools/workflows/ubuntu/badge.svg["Ubuntu Build Status", link="https://github.com/metanorma/csa-ccm-tools/actions?query=workflow%3Aubuntu"]
-image:https://github.com/metanorma/csa-ccm-tools/workflows/macos/badge.svg["OSX Build Status", link="https://github.com/metanorma/csa-ccm-tools/actions?query=workflow%3Amacos"]
-image:https://github.com/metanorma/csa-ccm-tools/workflows/windows/badge.svg["Windows Build Status", link="https://github.com/metanorma/csa-ccm-tools/actions?query=workflow%3Awindows"]
+image:https://github.com/metanorma/csa-ccm-tools/workflows/rake/badge.svg["test", link="https://github.com/metanorma/csa-ccm-tools/actions?query=workflow%3Arake"]
 
 This gem is used for the parsing and writing of the CSA CCM
 located at https://cloudsecurityalliance.org/working-groups/cloud-controls-matrix.
