@@ -7,11 +7,18 @@ on:
     inputs:
       next_version:
         description: |
-          Next release version. Possible values: x.y.z, major, minor, patch or pre|rc|etc
+          Next release version. Possible values: x.y.z, major, minor, patch (or pre|rc|etc).
+          Also, you can pass 'skip' to skip 'git tag' and do 'gem push' for the current version
         required: true
         default: 'skip'
-  push:
-    tags: [ v* ]
+  repository_dispatch:
+    types: [ do-release ]
+
+# Least-privilege ceiling for the called rubygems-release.yml: its release job
+# needs contents:write (git tag push) and id-token:write (OIDC Trusted Publishing).
+permissions:
+  contents: write
+  id-token: write
 
 jobs:
   release:
